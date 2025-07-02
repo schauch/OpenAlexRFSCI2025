@@ -1,10 +1,10 @@
 #This code file will walk you through doing some specific analysis on the OA output of authors from your institution
 #Specifically on journal articles that were identified by OpenAlex as being NOT grant funded and where an author from your institution served as corresponding author.
-#You will need to have first worked your way through the code file labeled XXX.
+#You will need to have first worked your way through the code file labeled RCode_OpenAlexR.
 
 library(tidyverse)
 
-#Read in your file that you made at the end of the code file labeled XXX.
+#Read in your file that you made at the end of the code file labeled RCode_OpenAlexR.
 Inst_Articles_InstCorresponding <- read.csv("DataOutput/Inst_Articles_InstCorresponding.csv")
 
 #First we're going to create a table by publisher showing totals for all articles with NO GRANT where someone at your institution served as corresponding authors

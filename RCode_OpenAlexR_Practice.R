@@ -97,19 +97,19 @@ Inst_Articles <- subset(Inst_Works, type == "article")
 #Current name used in OAX data goes to the left of the =, new name goes to the right.
 Inst_Articles <- Inst_Articles %>%
   mutate(host_organization_name = recode(host_organization_name, 
-                              "Wiley-Blackwell" = "Wiley", 
-                              "Springer Science+Business Media" = "Springer",
-                              "Routledge" = "Taylor & Francis",
-                              "Nature Portfolio" = "Springer",
-                              "RELX Group (Netherlands)" = "Elsevier",
-                              "Elsevier BV" = "Elsevier",
-                              "BioMed Central" = "Springer",
-                              "Springer Nature" = "Springer",
-                              "John Wiley & Sons Ltd" = "Wiley",
-                              "Palgrave Macmillan" = "Palgrave",
-                              "Springer International Publishing" = "Springer",
-                              "WileyOpen" = "Wiley",
-                              "Multidisciplinary Digital Publishing Institute" = "MDPI"))
+                                         "Wiley-Blackwell" = "Wiley", 
+                                         "Springer Science+Business Media" = "Springer",
+                                         "Routledge" = "Taylor & Francis",
+                                         "Nature Portfolio" = "Springer",
+                                         "RELX Group (Netherlands)" = "Elsevier",
+                                         "Elsevier BV" = "Elsevier",
+                                         "BioMed Central" = "Springer",
+                                         "Springer Nature" = "Springer",
+                                         "John Wiley & Sons Ltd" = "Wiley",
+                                         "Palgrave Macmillan" = "Palgrave",
+                                         "Springer International Publishing" = "Springer",
+                                         "WileyOpen" = "Wiley",
+                                         "Multidisciplinary Digital Publishing Institute" = "MDPI"))
 
 
 #Now we'll display in the console how many articles were published by publisher in descending order
@@ -243,15 +243,17 @@ write.csv(Inst_Articles_InstDistinctAuthors, "DataOutput/Inst_Articles_InstDisti
 #Now create a subset of articles where your institution's author has served as corresponding author
 Inst_Articles_InstCorresponding <- subset(Inst_Articles_InstAuthors, authorships_is_corresponding == TRUE)
 
-#Because some articles can have multiple corresponding articles, we need to
+#Because some articles can have multiple corresponding authors, we need to
 #deduplicate so that each article has just one row
 Inst_Articles_InstCorresponding <- Inst_Articles_InstCorresponding %>%
   distinct(id, .keep_all = TRUE)
 
+
+
 #Now see how many are OA and what status when it's your institution's author as corresponding authors
 #You can compare this to the OA status for all articles in this dataset, no matter who was the corresponding author (see line 123)
 table(Inst_Articles_InstCorresponding$oa_status)
-  
+
 
 #Unnest the grants list variable so you can see which articles did and did not have a grant
 Inst_Articles_InstCorresponding <- unnest(Inst_Articles_InstCorresponding, grants)

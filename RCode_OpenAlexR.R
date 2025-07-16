@@ -243,10 +243,12 @@ write.csv(Inst_Articles_InstDistinctAuthors, "DataOutput/Inst_Articles_InstDisti
 #Now create a subset of articles where your institution's author has served as corresponding author
 Inst_Articles_InstCorresponding <- subset(Inst_Articles_InstAuthors, authorships_is_corresponding == TRUE)
 
-#Because some articles can have multiple corresponding articles, we need to
+#Because some articles can have multiple corresponding authors, we need to
 #deduplicate so that each article has just one row
 Inst_Articles_InstCorresponding <- Inst_Articles_InstCorresponding %>%
   distinct(id, .keep_all = TRUE)
+
+
 
 #Now see how many are OA and what status when it's your institution's author as corresponding authors
 #You can compare this to the OA status for all articles in this dataset, no matter who was the corresponding author (see line 123)

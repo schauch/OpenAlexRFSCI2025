@@ -7,6 +7,8 @@ library(tidyverse)
 #Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
 Inst_Articles_InstCorresponding_Grants <- read.csv("DataOutput/Inst_Articles_InstCorresponding.csv")
 
+Inst_Articles_InstCorresponding_Grants <- subset(Inst_Articles_InstCorresponding_Grants, has_grant == "Y")
+
 #First we're going to create a table by publisher showing totals for grant-funded articles where someone at your institution served as corresponding authors
 ##And then we'll turn that table into a dataframe (DF) that will be used to make a bar chart.
 PublishersAllGrants <- table(Inst_Articles_InstCorresponding_Grants$host_organization_name)
@@ -55,26 +57,30 @@ PublishersGoldGrants <- PublishersGoldGrants %>% rename(Gold = Freq)
 PublishersHybridGrants <- PublishersHybridGrants %>% rename(Hybrid = Freq)
 PublishersClosedGrants <- PublishersClosedGrants %>% rename(Closed = Freq)
 PublishersGreenGrants <- PublishersGreenGrants %>% rename(Green = Freq)
-PublishersDiamondGrants <- PublishersDiamondGrants %>% rename(Diamond = Freq)
+#PublishersDiamondGrants <- PublishersDiamondGrants %>% rename(Diamond = Freq)
 
 #Now we can join the DFs together in a new DF called Publishers based on the common variable of Var1, which is the publisher name
 PublishersGrants <- PublishersAllGrants %>%
   full_join(PublishersGoldGrants, by = "Var1") %>%
   full_join(PublishersHybridGrants, by = "Var1") %>% 
   full_join(PublishersGreenGrants, by = "Var1") %>%
-  full_join(PublishersDiamondGrants, by = "Var1") %>%
+#  full_join(PublishersDiamondGrants, by = "Var1") %>%
   full_join(PublishersClosedGrants, by = "Var1")
 #You should see a larger table if you open Publishers that includes columns for Var1, All, Gold, Hybrid, Green, Diamond and Closed
 
 #Let's set any NAs to 0s
-PublishersGrants <- PublishersGrants %>% replace_na(list(All = 0, Gold = 0, Hybrid = 0, Green = 0, Diamond = 0, Closed = 0))
+#PublishersGrants <- PublishersGrants %>% replace_na(list(All = 0, Gold = 0, Hybrid = 0, Green = 0, Diamond = 0, Closed = 0))
+
+#Let's set any NAs to 0s
+PublishersGrants <- PublishersGrants %>% replace_na(list(All = 0, Gold = 0, Hybrid = 0, Green = 0, Closed = 0))
+
 
 #And then rename the Var1 column to Publisher
 PublishersGrants <- PublishersGrants %>%
   rename(Publisher = Var1)
 
 #Reorder by the All column and is descending. If you wish to reorder by a different column, just replace All below with the name you want.
-Publishers[order(-Publishers$All), ]
+PublishersGrants[order(-PublishersGrants$All), ]
 
 #Save our work
 write.csv(PublishersGrants, "DataOUtput/PublishersGrants.csv")
@@ -89,15 +95,23 @@ PublishersGrants <- PublishersGrants %>%
          ClosedPercent = paste0(round(ClosedPercent, 2), "%"),
          GreenPercent = (Green / All) * 100,
          GreenPercent = paste0(round(GreenPercent, 2), "%"),
-         DiamondPercent = (Diamond / All) * 100,
-         DiamondPercent = paste0(round(DiamondPercent, 2), "%"))
+     #    DiamondPercent = (Diamond / All) * 100,
+      #   DiamondPercent = paste0(round(DiamondPercent, 2), "%")
+     )
 
 #It kept our original columns showing counts, so we'll remove those now
-PublishersGrantsPercent <- PublishersGrants %>% select(-one_of('Hybrid', 'Gold', 'Green', 'Diamond', 'Closed', 'All'))
+#PublishersGrantsPercent <- PublishersGrants %>% select(-one_of('Hybrid', 'Gold', 'Green', 'Diamond', 'Closed', 'All'))
+
+#It kept our original columns showing counts, so we'll remove those now
+PublishersGrantsPercent <- PublishersGrants %>% select(-one_of('Hybrid', 'Gold', 'Green', 'Closed', 'All'))
 
 #And rename the columns to just the OA type
+#PublishersGrantsPercent <- PublishersGrantsPercent %>%
+#  rename(Gold = GoldPercent, Hybrid = HybridPercent, Green = GreenPercent, Diamond = DiamondPercent, Closed = ClosedPercent)
+
 PublishersGrantsPercent <- PublishersGrantsPercent %>%
-  rename(Gold = GoldPercent, Hybrid = HybridPercent, Green = GreenPercent, Diamond = DiamondPercent, Closed = ClosedPercent)
+  rename(Gold = GoldPercent, Hybrid = HybridPercent, Green = GreenPercent, Closed = ClosedPercent)
+
 
 #Save our work
 write.csv(PublishersGrantsPercent, "DataOutput/PublishersGrantsPercent.csv")
@@ -110,9 +124,15 @@ write.csv(PublishersGrantsPercent, "DataOutput/PublishersGrantsPercent.csv")
 PublishersGrants <- head(PublishersGrants, 10)
 
 #Now we have to "melt" the Publishers DF to the appropriate format
+#long_PublishersGrants <- PublishersGrants %>%
+#  select(Publisher, Gold, Hybrid, Green, Diamond, Closed) %>%
+#  pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed), 
+#               names_to = "Type", 
+#               values_to = "Value")
+
 long_PublishersGrants <- PublishersGrants %>%
-  select(Publisher, Gold, Hybrid, Green, Diamond, Closed) %>%
-  pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed), 
+  select(Publisher, Gold, Hybrid, Green, Closed) %>%
+  pivot_longer(cols = c(Gold, Hybrid, Green, Closed), 
                names_to = "Type", 
                values_to = "Value")
 

@@ -77,7 +77,7 @@ PublishersNoGrants <- PublishersNoGrants %>%
   rename(Publisher = Var1)
 
 #Reorder by the All column and is descending. If you wish to reorder by a different column, just replace All below with the name you want.
-Publishers[order(-Publishers$All), ]
+PublishersNoGrants[order(-PublishersNoGrants$All), ]
 
 #Save your work
 write.csv(PublishersNoGrants, "DataOUtput/PublishersNoGrants.csv")

@@ -4,6 +4,11 @@
 library(tidyverse)
 library(janitor)
 
+### NOTICE! This file uses the following code multiple times:
+# PublishersAllGrants <- PublishersAllGrants %>% 
+# select(-c(valid_percent))
+# This removes a column that's not always there; so if you get an error, don't worry about it!
+
 #Read in your file that you made at the end of the code file labeled RCode_OpenAlexR.
 Inst_Articles_InstCorresponding <- read.csv("DataOutput/Inst_Articles_InstCorresponding.csv")
 
@@ -167,8 +172,13 @@ long_Publishers <- Publishers %>%
 
 #Run the below code to specify what color you want to use for each OA type in the grid
 #The code comes with an accessible color scheme, but you can change them out just putting in a different HTML color code for each one
+#Go to https://r-charts.com/color-palettes/ to find example color palettes
+#Hover over a color to find its HEX number
+#Cn also exlore https://r-graph-gallery.com/color-palette-finder
 custom_colors <- c("Closed" = "#36638E", "Hybrid" = "#8B8E82", "Gold" = "#057BE7", "Diamond" = "#E95CCA", "Green" = "#B2C4DB")
 
+
+custom_colors <- paletteer_c("ggthemes::Blue-Green Sequential", 30)
 
 # And here we Create the stacked bar chart
 # This code involves three chunks that will also save the chart as a PNG in your Visuals folder in this project

@@ -2,11 +2,13 @@
 #Specifically on journal articles that were identified by OpenAlex as being grant funded and where an author from your institution served as corresponding author.
 #You will need to have first worked your way through the code file labeled RCode_OpenAlexR.
 
-install.packages("dplyr")
-
 library(tidyverse)
-library(dplyr)
-library(paletteer)
+library(janitor)
+
+### NOTICE! This file uses the following code multiple times:
+# PublishersAllGrants <- PublishersAllGrants %>% 
+# select(-c(valid_percent))
+# This removes a column that's not always there; so if you get an error, don't worry about it!
 
 #Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
 Inst_Articles_InstCorresponding_Grants <- read.csv("DataOutput/Inst_Articles_InstCorresponding.csv")
@@ -179,18 +181,10 @@ long_PublishersGrants <- PublishersGrants %>%
 
 #Run the below code to specify what color you want to use for each OA type in the grid
 #The code comes with an accessible color scheme, but you can change them out just putting in a different HTML color code for each one
+#Go to https://r-charts.com/color-palettes/ to find example color palettes
+#Hover over a color to find its HEX number
+#Cn also exlore https://r-graph-gallery.com/color-palette-finder
 custom_colors <- c("Closed" = "#36638E", "Hybrid" = "#8B8E82", "Gold" = "#057BE7", "Diamond" = "#E95CCA", "Green" = "#B2C4DB", "Bronze" = "#A97F86")
-
-#Or call the name of an existing R color palette from the paletteer package.
-#To explore existing palettes, visit https://r-graph-gallery.com/color-palette-finder
-#Make sure to filter for color palettes at least six long
-#If you choose a color palette with distinct colors, you will use the palette_d option
-#If you choose a color palette that's continuous, use the palette_c option
-#In either case, replace PALETTE NAME HERE with the name of your color palette, suchas:
-custom_colors <- palette_d("anemone")
-custom_colors <- paletteer::palette_d("PALETTE NAME HERE")
-#OR
-custom_colors <- paletteer::palette_c("PALETTE NAME HERE")
 
 
 # And here we Create the stacked bar chart

@@ -2,15 +2,20 @@
 #You will need to have first worked your way through the code file labeled RCode_OpenAlexR.
 
 library(tidyverse)
+library(janitor)
 
 #Read in your file that you made at the end of the code file labeled RCode_OpenAlexR.
 Inst_Articles_InstCorresponding <- read.csv("DataOutput/Inst_Articles_InstCorresponding.csv")
 
 #First we're going to create a table by publisher showing totals for all the articles where someone at your institution served as corresponding authors
 ##And then we'll turn that table into a dataframe that will be used to make a bar chart.
-PublishersAll <- table(Inst_Articles_InstCorresponding$host_organization_name)
-PublishersAll <- sort(PublishersAll, decreasing = TRUE)
-PublishersAll <- as.data.frame(PublishersAll)
+PublishersAll <- Inst_Articles_InstCorresponding %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
+
+PublishersAll <- PublishersAll %>% 
+  select(-c(valid_percent))
 
 
 ##In this next section, we're going to create subsets of these articles based on whether they published closed, hybrid, gold, diamond, or green OA
@@ -20,62 +25,98 @@ PublishersAll <- as.data.frame(PublishersAll)
 
 #Hybrid OA articles
 Inst_Articles_InstCorresponding_Hybrid <- subset(Inst_Articles_InstCorresponding, oa_status == "hybrid")
-PublishersHybrid <- table(Inst_Articles_InstCorresponding_Hybrid$host_organization_name)
-PublishersHybrid <- sort(PublishersHybrid, decreasing = TRUE)
-PublishersHybrid <- as.data.frame(PublishersHybrid)
+
+PublishersHybrid <- Inst_Articles_InstCorresponding_Hybrid %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
+
+PublishersHybrid <- PublishersHybrid %>% 
+  select(-c(valid_percent))
 
 #Gold OA articles
 Inst_Articles_InstCorresponding_Gold <- subset(Inst_Articles_InstCorresponding, oa_status == "gold")
-PublishersGold <- table(Inst_Articles_InstCorresponding_Gold$host_organization_name)
-PublishersGold <- sort(PublishersGold, decreasing = TRUE)
-PublishersGold <- as.data.frame(PublishersGold)
+
+PublishersGold <- Inst_Articles_InstCorresponding_Gold %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
+
+PublishersGold <- PublishersGold %>% 
+  select(-c(valid_percent))
 
 #Closed (i.e. paywalled) articles
 Inst_Articles_InstCorresponding_Closed <- subset(Inst_Articles_InstCorresponding, oa_status == "closed")
-PublishersClosed <- table(Inst_Articles_InstCorresponding_Closed$host_organization_name)
-PublishersClosed <- sort(PublishersClosed, decreasing = TRUE)
-PublishersClosed <- as.data.frame(PublishersClosed)
+
+PublishersClosed <- Inst_Articles_InstCorresponding_Closed %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
+
+PublishersClosed <- PublishersClosed %>% 
+  select(-c(valid_percent))
 
 #Green OA
 Inst_Articles_InstCorresponding_Green <- subset(Inst_Articles_InstCorresponding, oa_status == "green")
-PublishersGreen <- table(Inst_Articles_InstCorresponding_Green$host_organization_name)
-PublishersGreen <- sort(PublishersGreen, decreasing = TRUE)
-PublishersGreen <- as.data.frame(PublishersGreen)
+
+PublishersGreen <- Inst_Articles_InstCorresponding_Green %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
+
+PublishersGreen <- PublishersGreen %>% 
+  select(-c(valid_percent))
 
 #Diamond OA
 Inst_Articles_InstCorresponding_Diamond <- subset(Inst_Articles_InstCorresponding, oa_status == "diamond")
-PublishersDiamond <- table(Inst_Articles_InstCorresponding_Diamond$host_organization_name)
-PublishersDiamond <- sort(PublishersDiamond, decreasing = TRUE)
-PublishersDiamond <- as.data.frame(PublishersDiamond)
 
+PublishersDiamond <- Inst_Articles_InstCorresponding_Diamond %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
 
+PublishersDiamond <- PublishersDiamond %>% 
+  select(-c(valid_percent))
 
+#Bronze OA
+Inst_Articles_InstCorresponding_Bronze <- subset(Inst_Articles_InstCorresponding, oa_status == "bronze")
+
+PublishersBronze <- Inst_Articles_InstCorresponding_Bronze %>% 
+  tabyl(host_organization_name) %>% 
+  arrange(desc(n)) %>% 
+  select(-c(percent))
+
+PublishersBronze <- PublishersBronze %>% 
+  select(-c(valid_percent))
 
 #####Visuals####
 #We can now use the dataframes (DF) we made above and bring them together to help us create a bar chart. But first, we need to do a little cleaning
 #Rename the Freq variable in each DF to the OA type so the totals for each have their own column when brought together.
-PublishersAll <- PublishersAll %>% rename(All = Freq)
-PublishersGold <- PublishersGold %>% rename(Gold = Freq)
-PublishersHybrid <- PublishersHybrid %>% rename(Hybrid = Freq)
-PublishersClosed <- PublishersClosed %>% rename(Closed = Freq)
-PublishersGreen <- PublishersGreen %>% rename(Green = Freq)
-PublishersDiamond <- PublishersDiamond %>% rename(Diamond = Freq)
+PublishersAll <- PublishersAll %>% rename(All = n)
+PublishersGold <- PublishersGold %>% rename(Gold = n)
+PublishersHybrid <- PublishersHybrid %>% rename(Hybrid = n)
+PublishersClosed <- PublishersClosed %>% rename(Closed = n)
+PublishersGreen <- PublishersGreen %>% rename(Green = n)
+PublishersDiamond <- PublishersDiamond %>% rename(Diamond = n)
+PublishersBronze <- PublishersBronze %>% rename(Bronze = n)
 
 #Now we can join the DFs together in a new DF called Publishers based on the common variable of Var1, which is the publisher name
 Publishers <- PublishersAll %>%
-  full_join(PublishersGold, by = "Var1") %>%
-  full_join(PublishersHybrid, by = "Var1") %>% 
-  full_join(PublishersGreen, by = "Var1") %>%
-  full_join(PublishersDiamond, by = "Var1") %>%
-  full_join(PublishersClosed, by = "Var1")
+  full_join(PublishersGold, by = "host_organization_name") %>%
+  full_join(PublishersHybrid, by = "host_organization_name") %>% 
+  full_join(PublishersGreen, by = "host_organization_name") %>%
+  full_join(PublishersDiamond, by = "host_organization_name") %>%
+  full_join(PublishersClosed, by = "host_organization_name") %>% 
+  full_join(PublishersBronze, by = "host_organization_name")
+
 #You should see a larger table if you open Publishers that includes columns for Var1, All, Gold, Hybrid, Green, Diamond and Closed
 
 #Let's set any NAs to 0s
-Publishers <- Publishers %>% replace_na(list(All = 0, Gold = 0, Hybrid = 0, Green = 0, Diamond = 0, Closed = 0))
+Publishers <- Publishers %>% replace_na(list(All = 0, Gold = 0, Hybrid = 0, Green = 0, Diamond = 0, Closed = 0, Bronze = 0))
 
 #And then rename the Var1 column to Publisher
 Publishers <- Publishers %>%
-  rename(Publisher = Var1)
+  rename(Publisher = host_organization_name)
 
 #Reorder by the All column and is descending. If you wish to reorder by a different column, just replace All below with the name you want.
 Publishers[order(-Publishers$All), ]
@@ -89,32 +130,26 @@ PublishersPercent <- Publishers %>%
          GoldPercent = paste0(round(GoldPercent, 2), "%"),
          HybridPercent = (Hybrid / All) * 100,
          HybridPercent = paste0(round(HybridPercent, 2), "%"),
-         ClosedPercent = (Closed / All) * 100,
-         ClosedPercent = paste0(round(ClosedPercent, 2), "%"),
-        # BronzePercent = (Bronze / All) * 100,
-         #BronzePercent = paste0(round(BronzePercent, 2), "%"),
          GreenPercent = (Green / All) * 100,
          GreenPercent = paste0(round(GreenPercent, 2), "%"),
          DiamondPercent = (Diamond / All) * 100,
-         DiamondPercent = paste0(round(DiamondPercent, 2), "%"))
-
-# Publishers <- Publishers %>% 
-#  mutate(TotalPaidOAPercent = (TotalPaidOA / All) * 100,
-#         TotalPaidOAPercent = paste0(round(TotalPaidOAPercent, 2), "%"))
+         DiamondPercent = paste0(round(DiamondPercent, 2), "%"),
+         ClosedPercent = (Closed / All) * 100,
+         ClosedPercent = paste0(round(ClosedPercent, 2), "%"),
+         BronzePercent = (Bronze / All) * 100,
+         BronzePercent = paste0(round(BronzePercent, 2), "%")
+         )
 
 #It kept our original columns showing counts, so we'll remove those now
-PublishersPercent <- PublishersPercent %>% select(-one_of('Hybrid', 'Gold', 'Green', 'Diamond', 'Closed', 'All'))
+PublishersPercent <- PublishersPercent %>% select(-one_of('Hybrid', 'Gold', 'Green', 'Diamond', 'Closed', 'All', 'Bronze'))
 
 #And rename the columns to just the OA type
 PublishersPercent <- PublishersPercent %>%
-  rename(Gold = GoldPercent, Hybrid = HybridPercent, Green = GreenPercent, Diamond = DiamondPercent, Closed = ClosedPercent)
+  rename(Gold = GoldPercent, Hybrid = HybridPercent, Green = GreenPercent, Diamond = DiamondPercent, Closed = ClosedPercent, Bronze = BronzePercent)
 
 #Again, save our work
 write.csv(PublishersPercent, "DataOUtput/PublishersPercent.csv")
 
-
-#Publishers <- Publishers %>% 
-#  mutate(NonPaidOA = All - Gold - Hybrid)
 
 ###Making the visual
 
@@ -125,8 +160,8 @@ Publishers <- head(Publishers, 10)
 
 #Now we have to "melt" the Publishers DF to the appropriate format
 long_Publishers <- Publishers %>%
-  select(Publisher, Gold, Hybrid, Green, Diamond, Closed) %>%
-  pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed), 
+  select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze) %>%
+  pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
                values_to = "Value")
 

@@ -4,14 +4,10 @@
 
 library(tidyverse)
 library(janitor)
-
-### NOTICE! This file uses the following code multiple times:
-# PublishersAllGrants <- PublishersAllGrants %>% 
-# select(-c(valid_percent))
-# This removes a column that's not always there; so if you get an error, don't worry about it!
+library(here)
 
 #Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
-Inst_Articles_InstCorresponding_Grants <- read.csv("DataOutput/Inst_Articles_InstCorresponding.csv")
+Inst_Articles_InstCorresponding_Grants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
 
 Inst_Articles_InstCorresponding_Grants <- subset(Inst_Articles_InstCorresponding_Grants, has_grant == "Y")
 
@@ -22,102 +18,25 @@ PublishersAllGrants <- Inst_Articles_InstCorresponding_Grants %>%
   arrange(desc(n)) %>% 
   select(-c(percent))
 
+# Sometimes this creates a column, valid_percent, that we don't need, so this removes it
+# If there is no such column, you'll get a warning, but you can just ignore it.
 PublishersAllGrants <- PublishersAllGrants %>% 
   select(-c(valid_percent))
 
-##In this next section, we're going to create subsets of these articles based on whether they published closed, hybrid, gold, diamond, or green OA
-##And then we'll proceed along the same lines as above to make tables and then turn those tables into DFs 
-##so that we can pull them all together into one visual.
+# Rename the coun (n) column to All
+PublishersAllGrants <- PublishersAllGrants %>%
+  rename(All = n)
 
-#Hybrid OA
-Inst_Articles_InstCorresponding_Hybrid_Grants <- subset(Inst_Articles_InstCorresponding_Grants, oa_status == "hybrid")
+# Now we'll make a dataframe that's a pivot table showing the breakdown of articles by OA status and the publisher
+PublishersOAGrants <- tabyl(Inst_Articles_InstCorresponding_Grants, host_organization_name, oa_status)
 
-PublishersHybridGrants <- Inst_Articles_InstCorresponding_Hybrid_Grants %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
+# Rename our columns so they're in Title Case and will display better in our visual
+PublishersOAGrants <- PublishersOAGrants %>%
+  rename(Diamond = diamond, Closed = closed, Gold = gold, Green = green, Bronze = bronze, Hybrid = hybrid)
 
-PublishersHybridGrants <- PublishersHybridGrants %>% 
-  select(-c(valid_percent))
-
-#Gold OA
-Inst_Articles_InstCorresponding_Gold_Grants <- subset(Inst_Articles_InstCorresponding_Grants, oa_status == "gold")
-
-PublishersGoldGrants <- Inst_Articles_InstCorresponding_Gold_Grants %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
-
-PublishersGoldGrants <- PublishersGoldGrants %>% 
-  select(-c(valid_percent))
-
-#Closed
-Inst_Articles_InstCorresponding_Closed_Grants <- subset(Inst_Articles_InstCorresponding_Grants, oa_status == "closed")
-
-PublishersClosedGrants <- Inst_Articles_InstCorresponding_Closed_Grants %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
-
-PublishersClosedGrants <- PublishersClosedGrants %>% 
-  select(-c(valid_percent))
-
-#Green OA
-Inst_Articles_InstCorresponding_Green_Grants <- subset(Inst_Articles_InstCorresponding_Grants, oa_status == "green")
-
-PublishersGreenGrants <- Inst_Articles_InstCorresponding_Green_Grants %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
-
-PublishersGreenGrants <- PublishersGreenGrants %>% 
-  select(-c(valid_percent))
-
-#Diamond OA
-Inst_Articles_InstCorresponding_Diamond_Grants <- subset(Inst_Articles_InstCorresponding_Grants, oa_status == "diamond")
-
-PublishersDiamondGrants <- Inst_Articles_InstCorresponding_Diamond_Grants %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
-
-PublishersDiamondGrants <- PublishersDiamondGrants %>% 
-  select(-c(valid_percent))
-
-#BronzOA
-Inst_Articles_InstCorresponding_Bronze_Grants <- subset(Inst_Articles_InstCorresponding_Grants, oa_status == "bronze")
-
-PublishersBronzeGrants <- Inst_Articles_InstCorresponding_Bronze_Grants %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
-
-PublishersBronzeGrants <- PublishersBronzeGrants %>% 
-  select(-c(valid_percent))
-
-
-
-#####Visuals####
-#We can now use the DFs we made above and bring them together to help us create a bar chart. But first, we need to do a little cleaning
-#Rename the Freq variable in each DF to the OA type so the totals for each have their own column when brought together.
-
-PublishersAllGrants <- PublishersAllGrants %>% rename(All = n)
-PublishersGoldGrants <- PublishersGoldGrants %>% rename(Gold = n)
-PublishersHybridGrants <- PublishersHybridGrants %>% rename(Hybrid = n)
-PublishersClosedGrants <- PublishersClosedGrants %>% rename(Closed = n)
-PublishersGreenGrants <- PublishersGreenGrants %>% rename(Green = n)
-PublishersDiamondGrants <- PublishersDiamondGrants %>% rename(Diamond = n)
-PublishersBronzeGrants <- PublishersBronzeGrants %>% rename(Bronze = n)
-
-
-#Now we can join the DFs together in a new DF called Publishers based on the common variable of Var1, which is the publisher name
-PublishersGrants <- PublishersAllGrants %>%
-  full_join(PublishersGoldGrants, by = "host_organization_name") %>%
-  full_join(PublishersHybridGrants, by = "host_organization_name") %>% 
-  full_join(PublishersGreenGrants, by = "host_organization_name") %>%
-  full_join(PublishersDiamondGrants, by = "host_organization_name") %>%
-  full_join(PublishersClosedGrants, by = "host_organization_name") %>% 
-  full_join(PublishersBronzeGrants, by = "host_organization_name")
+# Next bring the two tables together
+Publishers <- PublishersAllGrants %>% 
+  full_join(PublishersOAGrants)
 
 #You should see a larger table if you open Publishers that includes columns for Var1, All, Gold, Hybrid, Green, Diamond and Closed
 

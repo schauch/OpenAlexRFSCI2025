@@ -14,6 +14,7 @@
 install.packages("openalexR")
 install.packages("tidyverse")
 install.packages("janitor")
+install.packages("here")
 
 # We also need to create some directory subfolders that we'll save our work to. 
 # Again, you just need to run the next two lines of code once.
@@ -27,6 +28,7 @@ dir.create("Visuals")
 library(openalexR)
 library(tidyverse)
 library(janitor)
+library(here)
 
 # Opens up the profile so you can tell OpenAlex you're a trusted party and it will handle your requests faster
 # Again, just run this line of code once.

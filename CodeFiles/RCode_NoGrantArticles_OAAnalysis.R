@@ -2,6 +2,8 @@
 #Specifically on journal articles that were identified by OpenAlex as being NOT grant funded and where an author from your institution served as corresponding author.
 #You will need to have first worked your way through the code file labeled RCode_OpenAlexR.
 
+install.packages("janitor")
+
 library(tidyverse)
 library(janitor)
 

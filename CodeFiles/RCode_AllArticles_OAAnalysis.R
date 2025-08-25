@@ -178,8 +178,6 @@ long_Publishers <- Publishers %>%
 custom_colors <- c("Closed" = "#36638E", "Hybrid" = "#8B8E82", "Gold" = "#057BE7", "Diamond" = "#E95CCA", "Green" = "#B2C4DB")
 
 
-custom_colors <- paletteer_c("ggthemes::Blue-Green Sequential", 30)
-
 # And here we Create the stacked bar chart
 # This code involves three chunks that will also save the chart as a PNG in your Visuals folder in this project
 # The first chunk sets the parameters for the saved image - you can change the width and height to whatever you prefer - just play around

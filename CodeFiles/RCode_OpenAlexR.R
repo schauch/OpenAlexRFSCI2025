@@ -77,10 +77,12 @@ write_rds(Inst_Works, "DataOutput/Inst_Works.rds")
 
 
 #### Data cleanup ####
+
+
 # We need to clean up our data to begin working with it.
 # Call in the saved file from above
 
-Inst_Works <- read_rds("DataOutput/Inst_Works.rds")
+Inst_Works <- read_rds(here("DataOutput/Inst_Works.rds"))
 
 # First let's get an overview of the data. The command glimpse will return a list of all our variable names 
 # along with data type (i.e. <chr>, <list>, or <dbl> (dbl is numeric)), and then the first few values for each variable
@@ -260,7 +262,9 @@ Articles_InstCorresponding <- Articles_InstCorresponding %>%
 
 # Now see how many are OA and what status when it's your institution's author as corresponding authors
 # You can compare this to the OA status for all articles in this dataset, no matter who was the corresponding author (see line 123)
-tabyl(Articles_InstCorresponding$oa_status)
+Articles_InstCorresponding %>% 
+  tabyl(oa_status) %>% 
+  arrange(desc(n))
   
 
 # Unnest the grants list variable so you can see which articles did and did not have a grant

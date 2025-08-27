@@ -8,44 +8,51 @@ library(here)
 # Read in your file that you made at the end of the code file labeled RCode_OpenAlexR.
 Articles_InstCorresponding <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
 
-# First we're going to create a table by publisher showing totals for all the articles where someone at your institution served as corresponding authors
-PublishersAll <- Articles_InstCorresponding %>% 
-  tabyl(host_organization_name) %>% 
-  arrange(desc(n)) %>% 
-  select(-c(percent))
+# This creates a table showing article counts by publisher and OA status for grant-funded articles 
+# where someone at your institution served as corresponding authors
+PublishersGrants <- tabyl(Articles_InstCorresponding, host_organization_name, oa_status)
 
-# Sometimes this creates a column, valid_percent, that we don't need, so this removes it
-# If there is no such column, you'll get a warning, but you can just ignore it.
-PublishersAll <- PublishersAll %>% 
-  select(-c(valid_percent))
+# If you're working with a small dataset, there's a chance at least one of the OA types will not have any matching values
+# In that case, the above code would not create a column for it, which will affect the rest of the code
+# To fix this, first run a list of all the column names in the table and see if any are missing
+# There should be columns for host_organization_name, closed, gold, hybrid, green, diamond, and bronze
+# If all seven columns are present, skip the next chunk of code.If one or more are missing, move to the next chunk of code
+names(PublishersGrants)
 
-# Rename the coun (n) column to All
-PublishersAll <- PublishersAll %>%
-  rename(All = n)
+# If one of the OA types is missing, use the below code to add a new column that will fill in 0 for all the values in that column
+# Replace oatype in the second line with whichever OA type is missing: closed, diamond, gold, green, bronze, or hybrid
+# If more than one OA type is missing, just run the code again with the next OA type in place of where oatype is 
+PublishersGrants <- PublishersGrants %>% 
+  add_column(oatype = 0)
 
-# Now we'll make a dataframe that's a pivot table showing the breakdown of articles by OA status and the publisher
-PublishersOA <- tabyl(Articles_InstCorresponding, host_organization_name, oa_status)
+# Once the table has all seven columns, we'll rename the columns 
+# so they're in Title Case and will display better in our visual
+PublishersGrants <- PublishersGrants %>%
+  rename(Publisher = host_organization_name,
+         Closed = closed,
+         Diamond = diamond, 
+         Gold = gold, 
+         Green = green, 
+         Bronze = bronze, 
+         Hybrid = hybrid)
 
-# Rename our columns so they're in Title Case and will display better in our visual
-PublishersOA <- PublishersOA %>%
-  rename(Diamond = diamond, Closed = closed, Gold = gold, Green = green, Bronze = bronze, Hybrid = hybrid)
+# Add a new column, Total, that shows the total article counts for all articles for each publisher
+# and then sort the table in descending order by the Total column
+# If you want to sort by a different column, just change Total in the third line to the name of the preferred column
+PublishersGrants <- PublishersGrants %>% 
+  adorn_totals("col") %>% 
+  arrange(desc(Total))
 
-# Next bring the two tables together
-Publishers <- PublishersAll %>% 
-  full_join(PublishersOA)
-
-# Let's set any NAs to 0s
-Publishers <- Publishers %>% replace_na(list(All = 0, Gold = 0, Hybrid = 0, Green = 0, Diamond = 0, Closed = 0, Bronze = 0))
-
-# And then rename the host column to Publisher
-Publishers <- Publishers %>%
-  rename(Publisher = host_organization_name)
-
-# Now we'll create another DF, PublishersPercent that shows our table but by percentage instead of count
-PublishersPercent <- Articles_InstCorresponding %>% 
+# Now we'll create another dataframe, PublishersGrantsPercent, which shows our table but by percentage instead of count
+Percent_PublishersGrants <- Inst_Articles_InstCorresponding_Grants %>% 
   tabyl(host_organization_name, oa_status) %>% 
-  adorn_percentages("row") %>% 
-  adorn_pct_formatting(digits = 0)
+  adorn_percentages() %>% 
+  adorn_pct_formatting()
+
+# Any column missing from the first table will also be missing in this table as well, so again if needed
+# rerun the below code, replacing oatype with whichever OA type you did above
+Percent_PublishersOAGrants <- Percent_PublishersOAGrants %>% 
+  add_column(oatype = "0.0%")
 
 ##### Visuals ####
 

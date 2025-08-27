@@ -7,14 +7,14 @@ library(janitor)
 library(here)
 
 # Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
-Inst_Articles_InstCorresponding_Grants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
+Articles_InstCorresponding_Grants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
 
 # This creates a subset of our article data that includes only those that have been identified as grant funded
-Inst_Articles_InstCorresponding_Grants <- subset(Inst_Articles_InstCorresponding_Grants, has_grant == "Y")
+Articles_InstCorresponding_Grants <- subset(Articles_InstCorresponding_Grants, has_grant == "Y")
 
 # This creates a table showing article counts by publisher and OA status for grant-funded articles 
 # where someone at your institution served as corresponding authors
-PublishersOAGrants <- tabyl(Inst_Articles_InstCorresponding_Grants, host_organization_name, oa_status)
+PublishersOAGrants <- tabyl(Articles_InstCorresponding_Grants, host_organization_name, oa_status)
 
 # If you're working with a small dataset, there's a chance at least one of the OA types will not have any matching values
 # In that case, the above code would not create a column for it, which will affect the rest of the code

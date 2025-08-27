@@ -154,7 +154,7 @@ Inst_Articles %>%
 # meaning most if not all articles will now have multiple rows.
 # We'll then create a subset that removes the other nested variables
 # so we can save it as its own CSV file in the DataOutput folder that we can explore separately
-Topics <- unnest(Inst_Articles, topics, names_sep = "_")
+Topics <- unnest(Inst_Articles, topics, names_sep = "_", keep_empty = TRUE)
 Topics <- subset(Topics, select = -c(authorships, keywords, apc, grants))
 write.csv(Topics, "DataOutput/Topics.csv")
 
@@ -162,13 +162,13 @@ write.csv(Topics, "DataOutput/Topics.csv")
 Inst_Articles <- Inst_Articles %>% select(-one_of('topics')) 
 
 # We're going to do the exact same thing but for the keywords variable this time
-Keywords <- unnest(Inst_Articles, keywords, names_sep = "_")
+Keywords <- unnest(Inst_Articles, keywords, names_sep = "_", keep_empty = TRUE)
 Keywords <- subset(Keywords, select = -c(authorships, apc, grants))
 write.csv(Keywords, "DataOutput/Keywords.csv")
 Inst_Articles <- Inst_Articles %>% select(-one_of('keywords'))
 
 # It's time to unnest the author variable so we'll have a row for each author for a single work, meaning we'll have multiple rows per work
-Articles_Authors <- unnest(Inst_Articles, authorships, names_sep = "_")
+Articles_Authors <- unnest(Inst_Articles, authorships, names_sep = "_", keep_empty = TRUE)
 
 # Create column called total_authors that shows the total number of authors per work.
 Articles_Authors <- Articles_Authors %>%
@@ -182,7 +182,7 @@ Articles_Authors <- Articles_Authors %>%
 # There's actually multiple levels of nesting going on, as the nested dataframe of authorship contains another
 # nested variable for authorship affiliation as authors can have multiple affiliations. 
 # So we need to unnest this as well. 
-Articles_Authors <- unnest(Articles_Authors, authorships_affiliations, names_sep = "_")
+Articles_Authors <- unnest(Articles_Authors, authorships_affiliations, names_sep = "_", keep_empty = TRUE)
 
 # Now let's create a subset that includes only the rows with collaborators as authors, i.e. those NOT associated with your institution 
 # To do this, you'll again need to change out the ROR ID - as the full URL - in the below code chunk - 
@@ -264,7 +264,7 @@ tabyl(Articles_InstCorresponding$oa_status)
   
 
 # Unnest the grants list variable so you can see which articles did and did not have a grant
-Articles_InstCorresponding <- unnest(Articles_InstCorresponding, grants)
+Articles_InstCorresponding <- unnest(Articles_InstCorresponding, grants, keep_empty = TRUE)
 
 # Unnesting grants is messy, so this cleans up to just the OAX grant funder ID and any NAs
 Articles_InstCorresponding <- Articles_InstCorresponding[grepl("^https:", Articles_InstCorresponding$grants) | is.na(Articles_InstCorresponding$grants), ]

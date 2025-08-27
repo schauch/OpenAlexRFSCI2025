@@ -10,24 +10,24 @@ Articles_InstCorresponding <- read_csv(here("DataOutput/Inst_Articles_InstCorres
 
 # This creates a table showing article counts by publisher and OA status for grant-funded articles 
 # where someone at your institution served as corresponding authors
-PublishersGrants <- tabyl(Articles_InstCorresponding, host_organization_name, oa_status)
+PublishersOA <- tabyl(Articles_InstCorresponding, host_organization_name, oa_status)
 
 # If you're working with a small dataset, there's a chance at least one of the OA types will not have any matching values
 # In that case, the above code would not create a column for it, which will affect the rest of the code
 # To fix this, first run a list of all the column names in the table and see if any are missing
 # There should be columns for host_organization_name, closed, gold, hybrid, green, diamond, and bronze
 # If all seven columns are present, skip the next chunk of code.If one or more are missing, move to the next chunk of code
-names(PublishersGrants)
+names(PublishersOA)
 
 # If one of the OA types is missing, use the below code to add a new column that will fill in 0 for all the values in that column
 # Replace oatype in the second line with whichever OA type is missing: closed, diamond, gold, green, bronze, or hybrid
 # If more than one OA type is missing, just run the code again with the next OA type in place of where oatype is 
-PublishersGrants <- PublishersGrants %>% 
+PublishersOA <- PublishersOA %>% 
   add_column(oatype = 0)
 
 # Once the table has all seven columns, we'll rename the columns 
 # so they're in Title Case and will display better in our visual
-PublishersGrants <- PublishersGrants %>%
+PublishersOA <- PublishersOA %>%
   rename(Publisher = host_organization_name,
          Closed = closed,
          Diamond = diamond, 
@@ -39,19 +39,19 @@ PublishersGrants <- PublishersGrants %>%
 # Add a new column, Total, that shows the total article counts for all articles for each publisher
 # and then sort the table in descending order by the Total column
 # If you want to sort by a different column, just change Total in the third line to the name of the preferred column
-PublishersGrants <- PublishersGrants %>% 
+PublishersOA <- PublishersOA %>% 
   adorn_totals("col") %>% 
   arrange(desc(Total))
 
 # Now we'll create another dataframe, PublishersGrantsPercent, which shows our table but by percentage instead of count
-Percent_PublishersGrants <- Inst_Articles_InstCorresponding_Grants %>% 
+Percent_PublishersOA <- Articles_InstCorresponding %>% 
   tabyl(host_organization_name, oa_status) %>% 
   adorn_percentages() %>% 
   adorn_pct_formatting()
 
 # Any column missing from the first table will also be missing in this table as well, so again if needed
 # rerun the below code, replacing oatype with whichever OA type you did above
-Percent_PublishersOAGrants <- Percent_PublishersOAGrants %>% 
+Percent_PublishersOA <- Percent_PublishersOA %>% 
   add_column(oatype = "0.0%")
 
 ##### Visuals ####
@@ -59,10 +59,10 @@ Percent_PublishersOAGrants <- Percent_PublishersOAGrants %>%
 # First, it can help to narrow down how many publishers are included in your chart if there are a lot. 
 # The code below will select the top 10 rows from our Publisher table (the one showing the total counts)
 # If you want more or less than 10, just change the number to what you want
-PublishersVisual <- head(Publishers, 10)
+PublishersOAVisual <- head(PublishersOA, 10)
 
 # Now we have to "melt" the PublishersVisual DF to the appropriate format
-long_Publishers <- PublishersVisual %>%
+long_PublishersOA <- PublishersOAVisual %>%
   select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze) %>%
   pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
@@ -83,7 +83,7 @@ custom_colors <- c("Closed" = "#36638E", "Hybrid" = "#8B8E82", "Gold" = "#057BE7
 # The third chunk, starting with dev.off, closes the command and saves the actual file.
 png(filename = "Visuals/PublishedArticlesAll.png", 
     width = 6160, height = 3000, res = 600)
-ggplot(long_Publishers, aes(x = Publisher, y = Value, fill = Type)) +
+ggplot(long_PublishersOA, aes(x = Publisher, y = Value, fill = Type)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   scale_fill_manual(values = custom_colors) +

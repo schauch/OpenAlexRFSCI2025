@@ -43,7 +43,7 @@ PublishersOA <- PublishersOA %>%
   adorn_totals("col") %>% 
   arrange(desc(Total))
 
-# Now we'll create another dataframe, PublishersGrantsPercent, which shows our table but by percentage instead of count
+# Now we'll create another dataframe which shows our table but by percentage instead of count
 Percent_PublishersOA <- Articles_InstCorresponding %>% 
   tabyl(host_organization_name, oa_status) %>% 
   adorn_percentages() %>% 

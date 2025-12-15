@@ -40,8 +40,8 @@ file.edit("~/.Rprofile")
 Inst_Works <- oa_fetch(    # This line of code should not change. 
   entity = "works",    # Type of record you want - replace "works" with another type if you want (leave the quotation marks). See the list of OAX entities for options: https://docs.openalex.org/api-entities/entities-overview
   authorships.institutions.ror = c("01keh0577"),   # Replace the ID in the quotation marks with the ROR ID you want (see https://ror.org/). If you want multiple, separate with a comma after the closing quotation mark.
-  from_publication_date = "2024-06-01", # If want to pull other years, just change the date range in this and the next lines of code.
-  to_publication_date = "2024-07-31",
+  from_publication_date = "2025-08-01", # If want to pull other years, just change the date range in this and the next lines of code.
+  to_publication_date = "2025-10-31",
   mailto = oa_email(),  # Do not change this or the rest of the lines
   per_page = 25,
   verbose = TRUE
@@ -49,7 +49,7 @@ Inst_Works <- oa_fetch(    # This line of code should not change.
 # The more data you try to pull from the API, the more problems can pop up, so it can help to break your pull into chunks
 # such as by using smaller date ranges.
 # After pulling one batch, save as an RDS file (see next), then change dates and pull again as needed
-# Make sure to save after each pull or change the name for the dataframe (InstWorks) so you don't erase/lose a prior pull
+# Make sure to save after each pull or change the name for the dataframe (Inst_Works) so you don't erase/lose a prior pull
 
 # The dataframes are not flat spreadsheets, so we can't save them as a CSV file yet. We have to first save them as
 # a special R file format called RDS. It's not great for the long term because it will only work with R, 
@@ -57,18 +57,18 @@ Inst_Works <- oa_fetch(    # This line of code should not change.
 # The below code will create a saved file in the DataOutput subfolder of your project. Change the file name to anything you wish 
 # but make sure it begins with DataOutput/ and ends in .rds.
 
-write_rds(Inst_Works, "DataOutput/Inst_Works_2024_Summer_FSCI.rds")
-write_rds(Inst_Works, "DataOutput/Inst_Works_2024_Fall_FSCI.rds")
+write_rds(Inst_Works, "DataOutput/Inst_Works_2025_Summer_FSCI.rds")
+write_rds(Inst_Works, "DataOutput/Inst_Works_2025_Fall_FSCI.rds")
 
 # Now read the file back in. If you had to pull data in chunks, read in each file with a different name
 # and then follow the next step.
-Inst_Works_2024_Summer_FSCI <- read_rds("DataOutput/Inst_Works_2024_Summer_FSCI.rds")
-Inst_Works_2024_Fall_FSCI <- read_rds("DataOutput/Inst_Works_2024_Fall_FSCI.rds")
+Inst_Works_2025_Summer_FSCI <- read_rds("DataOutput/Inst_Works_2025_Summer_FSCI.rds")
+Inst_Works_2025_Fall_FSCI <- read_rds("DataOutput/Inst_Works_2025_Fall_FSCI.rds")
 
 
 # If pulled you pulled the data in by multiple batches, use this to combine (or bind) them into one dataframe
 # You can add as many dataframes as you need, just separate with a comma after each one until the last one.
-Inst_Works <- bind_rows(Inst_Works_2024_Summer_FSCI, Inst_Works_2024_Fall_FSCI)
+Inst_Works <- bind_rows(Inst_Works_2025_Summer_FSCI, Inst_Works_2025_Fall_FSCI)
 
 # Save this new dataframe so we do not have to repeat the above steps
 
@@ -86,12 +86,13 @@ Inst_Works <- read_rds(here("DataOutput/Inst_Works.rds"))
 
 # First let's get an overview of the data. The command glimpse will return a list of all our variable names 
 # along with data type (i.e. <chr>, <list>, or <dbl> (dbl is numeric)), and then the first few values for each variable
+# Any variable that is a <list> is nested and keeping our dataframe from being flat - thus we will have to remove it or unnest it to save as a CSV.
 # We can also use this to decide which columns are not needed and that we can remove in the next step
 glimpse(Inst_Works)
 
 # We'll first delete unneeded columns. If you wish to include any, just delete its name from the list in the next chunk of code
 # Remember to also delete the single quotation marks around it and the comma that comes after it as well.
-Inst_Works <- Inst_Works %>% select(-one_of('abstract', 'pdf_url', 'first_page', 'last_page', 'volume', 'issue', 'any_repository_has_fulltext', 'cited_by_api_url','ids', 'referenced_works', 'related_works', 'concepts', 'counts_by_year')) 
+Inst_Works <- Inst_Works %>% select(-one_of('abstract', 'pdf_url', 'first_page', 'last_page', 'volume', 'issue', 'any_repository_has_fulltext','ids', 'referenced_works', 'related_works', 'concepts', 'counts_by_year')) 
 
 # It can be good practice to check to see if you have duplicate records
 # Run the below chunk to check for duplicates based on OAX's id for the work. 
@@ -127,7 +128,6 @@ Inst_Articles <- Inst_Articles %>%
                               "Springer Nature" = "Springer",
                               "John Wiley & Sons Ltd" = "Wiley",
                               "Palgrave Macmillan" = "Palgrave",
-                              "Springer International Publishing" = "Springer",
                               "WileyOpen" = "Wiley",
                               "Multidisciplinary Digital Publishing Institute" = "MDPI"))
 
@@ -157,7 +157,7 @@ Inst_Articles %>%
 # We'll then create a subset that removes the other nested variables
 # so we can save it as its own CSV file in the DataOutput folder that we can explore separately
 Topics <- unnest(Inst_Articles, topics, names_sep = "_", keep_empty = TRUE)
-Topics <- subset(Topics, select = -c(authorships, keywords, apc, grants))
+Topics <- subset(Topics, select = -c(authorships, keywords, apc))
 write.csv(Topics, "DataOutput/Topics.csv")
 
 # Now remove the topics variable from the main dataframe
@@ -165,7 +165,7 @@ Inst_Articles <- Inst_Articles %>% select(-one_of('topics'))
 
 # We're going to do the exact same thing but for the keywords variable this time
 Keywords <- unnest(Inst_Articles, keywords, names_sep = "_", keep_empty = TRUE)
-Keywords <- subset(Keywords, select = -c(authorships, apc, grants))
+Keywords <- subset(Keywords, select = -c(authorships, apc))
 write.csv(Keywords, "DataOutput/Keywords.csv")
 Inst_Articles <- Inst_Articles %>% select(-one_of('keywords'))
 
@@ -180,6 +180,8 @@ Articles_Authors <- Articles_Authors %>%
 # Create another column called fract_authors showing the fractional author count per work 
 Articles_Authors <- Articles_Authors %>%
   mutate(fract_author = 1 / total_authors)
+
+glimpse(Articles_Authors)
 
 # There's actually multiple levels of nesting going on, as the nested dataframe of authorship contains another
 # nested variable for authorship affiliation as authors can have multiple affiliations. 
@@ -218,7 +220,7 @@ CollabDistinctWorks <- Articles_Collabs %>%
   distinct(id, .keep_all = TRUE)
 
 # Save the new dataframe for later analysis, which means removing the remaining nested variables
-Articles_Collabs <- Articles_Collabs %>% select(-one_of('grants', 'apc')) 
+Articles_Collabs <- Articles_Collabs %>% select(-one_of('apc')) 
 write.csv(Articles_Collabs, "DataOutput/Articles_Collabs.csv")
 
 # To focus on authors from your institution, create a subset with just rows featuring your authors
@@ -232,7 +234,7 @@ Articles_InstAuthors <- Articles_InstAuthors %>%
   ungroup()
 
 # Remove the remaining nested variables to save list of all your institution's authors (even duplicates) as a csv file
-Articles_InstAuthors_CSV <- Articles_InstAuthors %>% select(-one_of('grants', 'apc')) 
+Articles_InstAuthors_CSV <- Articles_InstAuthors %>% select(-one_of('apc')) 
 write.csv(Articles_InstAuthors_CSV, "DataOutput/Articles_InstAuthors_CSV.csv")
 
 # Making sure we don't have duplicates because someone has multiple current affiliations
@@ -248,7 +250,7 @@ Articles_InstDistinctAuthors <- Articles_InstAuthors %>%
 tabyl(Articles_InstDistinctAuthors$author_totalworks)
 
 # Remove remaining nested variables so can then save as csv file.
-Articles_InstDistinctAuthors <- Articles_InstDistinctAuthors %>% select(-one_of('grants','apc')) 
+Articles_InstDistinctAuthors <- Articles_InstDistinctAuthors %>% select(-one_of('apc')) 
 write.csv(Articles_InstDistinctAuthors, "DataOutput/Articles_InstDistinctAuthors.csv")
 
 # Now create a subset of articles where your institution's author has served as corresponding author
@@ -266,6 +268,7 @@ Articles_InstCorresponding %>%
   tabyl(oa_status) %>% 
   arrange(desc(n))
   
+glimpse(Articles_InstCorresponding)
 
 # Unnest the grants list variable so you can see which articles did and did not have a grant
 Articles_InstCorresponding <- unnest(Articles_InstCorresponding, grants, keep_empty = TRUE)

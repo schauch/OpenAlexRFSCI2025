@@ -1,5 +1,5 @@
 # OpenAlexRFSCI2025
-This repository includes all the code and instructions needed to analyze OpenAlex data as explained in the FSCI 2025 workshop "Assessing Institutional Research Data Using OpenAlex."
+This repository includes all the code and instructions needed to analyze OpenAlex data as explained in the FSCI workshop "Assessing Institutional Research Data Using OpenAlex." This workshop was first offered as part of FSCI 2025 and is being offered agains as part of FSCI's Charleston Conference Asia 2026.
 
 This project includes the following code files:
 1. RCode_Practice - This file is just intended for the FSCI workshop and is not needed to analyze any OpenAlex data.

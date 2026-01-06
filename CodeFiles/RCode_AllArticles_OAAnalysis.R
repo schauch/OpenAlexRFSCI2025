@@ -8,6 +8,12 @@ library(here)
 # Read in your file that you made at the end of the code file labeled RCode_OpenAlexR.
 Articles_InstCorresponding <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
 
+# Some entries will not have publisher information and will be lised as NA
+# We can use the below code to remove rows with no publisher names, which will help our graphs
+# Or skip this chunk if you want to include NAs in your results
+Articles_InstCorresponding <- Articles_InstCorresponding %>% 
+  filter(!is.na(host_organization_name))
+
 # This creates a table showing article counts by publisher and OA status for grant-funded articles 
 # where someone at your institution served as corresponding authors
 PublishersOA <- tabyl(Articles_InstCorresponding, host_organization_name, oa_status)
@@ -63,10 +69,14 @@ PublishersOAVisual <- head(PublishersOA, 10)
 
 # Now we have to "melt" the PublishersVisual DF to the appropriate format
 long_PublishersOA <- PublishersOAVisual %>%
-  select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze) %>%
+  select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze, Total) %>%
   pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
-               values_to = "Value")
+               values_to = "Value") %>% 
+#  group_by(Publisher) %>%
+#  mutate(Total = sum(Value)) %>%
+#  ungroup() %>%
+  mutate(Publisher = forcats::fct_reorder(Publisher, Total, .desc = FALSE))
 
 # Run the below code to specify what color you want to use for each OA type in the grid
 # The code comes with an accessible color scheme, but you can change them out just putting in a different HTML color code for each one

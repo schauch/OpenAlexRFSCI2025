@@ -16,6 +16,9 @@ install.packages("tidyverse")
 install.packages("janitor")
 install.packages("here")
 
+install.packages("remotes")
+remotes::install_github("ropensci/openalexR")
+
 # We also need to create some directory subfolders that we'll save our work to. 
 # Again, you just need to run the next two lines of code once.
 
@@ -40,8 +43,8 @@ file.edit("~/.Rprofile")
 Inst_Works <- oa_fetch(    # This line of code should not change. 
   entity = "works",    # Type of record you want - replace "works" with another type if you want (leave the quotation marks). See the list of OAX entities for options: https://docs.openalex.org/api-entities/entities-overview
   authorships.institutions.ror = c("01keh0577"),   # Replace the ID in the quotation marks with the ROR ID you want (see https://ror.org/). If you want multiple, separate with a comma after the closing quotation mark.
-  from_publication_date = "2025-08-01", # If want to pull other years, just change the date range in this and the next lines of code.
-  to_publication_date = "2025-10-31",
+  from_publication_date = "2025-06-01", # If want to pull other years, just change the date range in this and the next lines of code.
+  to_publication_date = "2025-07-31",
   mailto = oa_email(),  # Do not change this or the rest of the lines
   per_page = 25,
   verbose = TRUE
@@ -51,11 +54,12 @@ Inst_Works <- oa_fetch(    # This line of code should not change.
 # After pulling one batch, save as an RDS file (see next), then change dates and pull again as needed
 # Make sure to save after each pull or change the name for the dataframe (Inst_Works) so you don't erase/lose a prior pull
 
-# The dataframes are not flat spreadsheets, so we can't save them as a CSV file yet. We have to first save them as
+# The dataframes are not flat spreadsheets - they are nested, meaning we have tables within tables.
+# So we can't save them as a CSV file yet. We have to first save them as
 # a special R file format called RDS. It's not great for the long term because it will only work with R, 
 # but it's fine until we get them flat.
 # The below code will create a saved file in the DataOutput subfolder of your project. Change the file name to anything you wish 
-# but make sure it begins with DataOutput/ and ends in .rds.
+# but make sure it begins with DataOutput/ and ends in .rds: "DataOutput/[FileNameHere].rds"
 
 write_rds(Inst_Works, "DataOutput/Inst_Works_2025_Summer_FSCI.rds")
 write_rds(Inst_Works, "DataOutput/Inst_Works_2025_Fall_FSCI.rds")
@@ -66,7 +70,7 @@ Inst_Works_2025_Summer_FSCI <- read_rds("DataOutput/Inst_Works_2025_Summer_FSCI.
 Inst_Works_2025_Fall_FSCI <- read_rds("DataOutput/Inst_Works_2025_Fall_FSCI.rds")
 
 
-# If pulled you pulled the data in by multiple batches, use this to combine (or bind) them into one dataframe
+# If you pulled the data in by multiple batches, use this to combine (or bind) them into one dataframe
 # You can add as many dataframes as you need, just separate with a comma after each one until the last one.
 Inst_Works <- bind_rows(Inst_Works_2025_Summer_FSCI, Inst_Works_2025_Fall_FSCI)
 
@@ -90,28 +94,50 @@ Inst_Works <- read_rds(here("DataOutput/Inst_Works.rds"))
 # We can also use this to decide which columns are not needed and that we can remove in the next step
 glimpse(Inst_Works)
 
+
 # We'll first delete unneeded columns. If you wish to include any, just delete its name from the list in the next chunk of code
 # Remember to also delete the single quotation marks around it and the comma that comes after it as well.
-Inst_Works <- Inst_Works %>% select(-one_of('abstract', 'pdf_url', 'first_page', 'last_page', 'volume', 'issue', 'any_repository_has_fulltext','ids', 'referenced_works', 'related_works', 'concepts', 'counts_by_year')) 
+Inst_Works <- Inst_Works %>% select(-one_of('abstract', 
+                                            'pdf_url', 
+                                            'first_page', 
+                                            'last_page', 
+                                            'volume', 
+                                            'issue', 
+                                            'any_repository_has_fulltext',
+                                            'ids', 
+                                            'referenced_works', 
+                                            'related_works', 
+                                            'concepts', 
+                                            'counts_by_year')) 
 
 # It can be good practice to check to see if you have duplicate records
 # Run the below chunk to check for duplicates based on OAX's id for the work. 
 # If you do not have any duplicates, you should see a 0 returned in the console, which is what we want.
 # If so, skip the next chunk of code.
 sum(duplicated(Inst_Works$id))
+sum(duplicated(Inst_Works$doi))
 
 # If you get a number returned that's greater than 0, run the next code chunk to remove all duplicate rows. 
 # This will leave just one row for each duplicate.
 Inst_Works <- Inst_Works %>%
   distinct(id, .keep_all = TRUE)
 
-# We're going to focus on journal articles, so let's see how many are in our dataset, compared to other work types, by running below code.
+Inst_Works <- Inst_Works %>%
+  distinct(doi, .keep_all = TRUE)
+
+# We're going to focus on journal articles, so let's see how many are in our dataset, compared to other work types.
 tabyl(Inst_Works$type)
 
 # Now create a subset of data that includes only journal articles
+# Notice we are using a new name - Inst_Articles - that will create a new dataframe instead of writing over the old one, Inst_Works
 Inst_Articles <- filter(Inst_Works, type == "article")
 
-# We're going to analyze articles by publisher, but the display names for publishers in OAX is not always standardized
+Inst_Articles <- Inst_Articles %>% 
+  mutate(has_grant = ifelse(is.na(funders) & is.na(awards), "N", "Y"))
+
+
+# We're going to analyze articles by publisher, but the display names for publishers in OAX is not always standardized 
+# or uses long versions of publisher names that are not great for graphs
 # Use the below code to bring them all under one standard name. This also combines subsidiaries with their parent publishers
 # If you wish to keep the subsidiaries separate, simply delete that entire line from the code.
 # If you have additional publisher name changes you wish to make, just copy one line and paste it below and then change the two names to what you want.
@@ -137,7 +163,7 @@ Inst_Articles %>%
   tabyl(host_organization_name) %>% 
   arrange(desc(n))
 
-# Now let's see how many works are OA and by which work type
+# Now let's see how many works are OA and by which work type in descending order
 Inst_Articles %>% 
   tabyl(oa_status) %>% 
   arrange(desc(n))
@@ -150,24 +176,42 @@ Inst_Articles %>%
   adorn_ns()
 
 
-# As explained above, the current dataset is not in a simple flat spreadsheet. Instead, it has spreadsheets (or dataframes)
-# nested in the main dataframe (shown as data type list). We need to start separating these out.
+# As explained above, the current dataframe is not in a simple flat spreadsheet. Instead, it has spreadsheets (or dataframes)
+# nested in the main dataframe (shown as data type "list"). We need to start separating these out.
 # We'll first unnest the topics variable, which will create one row for each topic assigned to an article
 # meaning most if not all articles will now have multiple rows.
 # We'll then create a subset that removes the other nested variables
-# so we can save it as its own CSV file in the DataOutput folder that we can explore separately
+# so we can save them each as their own CSV file in the DataOutput folder that we can explore separately
 Topics <- unnest(Inst_Articles, topics, names_sep = "_", keep_empty = TRUE)
-Topics <- subset(Topics, select = -c(authorships, keywords, apc))
+Topics <- subset(Topics, select = -c(authorships, keywords, apc, awards, sustainable_development_goals, funders))
 write.csv(Topics, "DataOutput/Topics.csv")
 
 # Now remove the topics variable from the main dataframe
 Inst_Articles <- Inst_Articles %>% select(-one_of('topics')) 
 
-# We're going to do the exact same thing but for the keywords variable this time
+# Keywords nested variable
 Keywords <- unnest(Inst_Articles, keywords, names_sep = "_", keep_empty = TRUE)
-Keywords <- subset(Keywords, select = -c(authorships, apc))
+Keywords <- subset(Keywords, select = -c(authorships, apc, awards, sustainable_development_goals, funders))
 write.csv(Keywords, "DataOutput/Keywords.csv")
 Inst_Articles <- Inst_Articles %>% select(-one_of('keywords'))
+
+# Sustainable_development_goals variable 
+Sustainable <- unnest(Inst_Articles, sustainable_development_goals, names_sep = "_", keep_empty = TRUE)
+Sustainable <- subset(Sustainable, select = -c(authorships, apc, awards, funders))
+write.csv(Keywords, "DataOutput/Keywords.csv")
+Inst_Articles <- Inst_Articles %>% select(-one_of('sustainable_development_goals'))
+
+# Awards variable
+Awards <- unnest(Inst_Articles, awards, names_sep = "_", keep_empty = TRUE)
+Awards <- subset(Awards, select = -c(authorships, apc, funders))
+write.csv(Awards, "DataOutput/Awards.csv")
+Inst_Articles <- Inst_Articles %>% select(-one_of('awards'))
+
+# Funders variable
+Funders <- unnest(Inst_Articles, funders, names_sep = "_", keep_empty = TRUE)
+Funders <- subset(Funders, select = -c(authorships, apc))
+write.csv(Funders, "DataOutput/Funders.csv")
+Inst_Articles <- Inst_Articles %>% select(-one_of('funders'))
 
 # It's time to unnest the author variable so we'll have a row for each author for a single work, meaning we'll have multiple rows per work
 Articles_Authors <- unnest(Inst_Articles, authorships, names_sep = "_", keep_empty = TRUE)
@@ -267,11 +311,9 @@ Articles_InstCorresponding <- Articles_InstCorresponding %>%
 Articles_InstCorresponding %>% 
   tabyl(oa_status) %>% 
   arrange(desc(n))
-  
-glimpse(Articles_InstCorresponding)
 
 # Unnest the grants list variable so you can see which articles did and did not have a grant
-Articles_InstCorresponding <- unnest(Articles_InstCorresponding, grants, keep_empty = TRUE)
+Articles_InstCorresponding <- unnest(Articles_InstCorresponding, funders, names_sep = "_", keep_empty = TRUE)
 
 # Unnesting grants is messy, so this cleans up to just the OAX grant funder ID and any NAs
 Articles_InstCorresponding <- Articles_InstCorresponding[grepl("^https:", Articles_InstCorresponding$grants) | is.na(Articles_InstCorresponding$grants), ]
@@ -280,10 +322,6 @@ Articles_InstCorresponding <- Articles_InstCorresponding[grepl("^https:", Articl
 sum(duplicated(Articles_InstCorresponding$id))
 Articles_InstCorresponding <- Articles_InstCorresponding %>%
   distinct(id, .keep_all = TRUE)
-
-# Create new variable to say whether it has a grant at all or not.
-Articles_InstCorresponding <- Articles_InstCorresponding %>%
-  mutate(has_grant = ifelse(is.na(grants), "N", "Y"))
 
 # We now have our final flat spreadsheet that we can save as a CSV file. 
 Articles_InstCorresponding <- Articles_InstCorresponding %>% select(-one_of('apc')) 

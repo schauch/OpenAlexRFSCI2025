@@ -9,6 +9,12 @@ library(here)
 # Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
 Articles_InstCorresponding_Grants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
 
+# Some entries will not have publisher information and will be lised as NA
+# We can use the below code to remove rows with no publisher names, which will help our graphs
+# Or skip this chunk if you want to include NAs in your results
+Articles_InstCorresponding_Grants <- Articles_InstCorresponding_Grants %>% 
+  filter(!is.na(host_organization_name))
+
 # This creates a subset of our article data that includes only those that have been identified as grant funded
 Articles_InstCorresponding_Grants <- subset(Articles_InstCorresponding_Grants, has_grant == "Y")
 
@@ -48,7 +54,7 @@ PublishersOAGrants <- PublishersOAGrants %>%
   arrange(desc(Total))
 
 # Now we'll create another dataframe, PublishersGrantsPercent, which shows our table but by percentage instead of count
-Percent_PublishersOAGrants <- Inst_Articles_InstCorresponding_Grants %>% 
+Percent_PublishersOAGrants <- Articles_InstCorresponding_Grants %>% 
   tabyl(host_organization_name, oa_status) %>% 
   adorn_percentages() %>% 
   adorn_pct_formatting()
@@ -67,10 +73,15 @@ PublishersOAGrants <- head(PublishersOAGrants, 10)
 
 # Now we have to "melt" the Publishers DF to the appropriate format
 long_PublishersOAGrants <- PublishersOAGrants %>%
-  select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze) %>%
+  select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze, Total) %>%
   pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
-               values_to = "Value")
+               values_to = "Value") %>%
+#  group_by(Publisher) %>%
+#  mutate(Total = sum(Value)) %>%
+#  ungroup() %>%
+  mutate(Publisher = forcats::fct_reorder(Publisher, Total, .desc = FALSE))
+
 
 
 # Run the below code to specify what color you want to use for each OA type in the grid

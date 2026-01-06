@@ -11,6 +11,12 @@ library(here)
 # Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
 Articles_InstCorresponding_NoGrants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
 
+# Some entries will not have publisher information and will be lised as NA
+# We can use the below code to remove rows with no publisher names, which will help our graphs
+# Or skip this chunk if you want to include NAs in your results
+Articles_InstCorresponding_NoGrants <- Articles_InstCorresponding_NoGrants %>% 
+  filter(!is.na(host_organization_name))
+
 # This creates a subset of our article data that includes only those that have been identified as grant funded
 Articles_InstCorresponding_NoGrants <- subset(Articles_InstCorresponding_NoGrants, has_grant == "N")
 
@@ -50,7 +56,7 @@ PublishersOANoGrants <- PublishersOANoGrants %>%
   arrange(desc(Total))
 
 # Now we'll create another dataframe, PublishersGrantsPercent, which shows our table but by percentage instead of count
-Percent_PublishersOANoGrants <- Inst_Articles_InstCorresponding_Grants %>% 
+Percent_PublishersOANoGrants <- Articles_InstCorresponding_NoGrants %>% 
   tabyl(host_organization_name, oa_status) %>% 
   adorn_percentages() %>% 
   adorn_pct_formatting()
@@ -66,14 +72,18 @@ Percent_PublishersOANoGrants <- Percent_PublishersOANoGrants %>%
 # First, it can help to narrow down how many publishers are included in your chart if there are a lot. 
 # The code below will select the top 10 rows from our Publisher table (the one showing the total counts)
 # If you want more or less than 10, just change the number to what you want
-PublishersNoGrants <- head(PublishersNoGrants, 10)
+PublishersOANoGrants <- head(PublishersOANoGrants, 10)
 
 # Now we have to "melt" the Publishers DF to the appropriate format
-long_PublishersNoGrants <- PublishersNoGrants %>%
+long_PublishersOANoGrants <- PublishersOANoGrants %>%
   select(Publisher, Gold, Hybrid, Diamond, Closed, Green, Bronze) %>%
   pivot_longer(cols = c(Gold, Hybrid, Diamond, Closed, Green, Bronze), 
                names_to = "Type", 
-               values_to = "Value")
+               values_to = "Value") %>% 
+  group_by(Publisher) %>%
+  mutate(Total = sum(Value)) %>%
+  ungroup() %>%
+  mutate(Publisher = forcats::fct_reorder(Publisher, Total, .desc = FALSE))
 
 # Run the below code to specify what color you want to use for each OA type in the grid
 # The code comes with an accessible color scheme, but you can change them out just putting in a different HTML color code for each one
@@ -90,7 +100,7 @@ custom_colors <- c("Closed" = "#36638E", "Hybrid" = "#8B8E82", "Gold" = "#057BE7
 # The third chunk, starting with dev.off, closes the command and saves the actual file.
 png(filename = "Visuals/PublishedArticlesNoGrants.png", 
     width = 6160, height = 3000, res = 600)
-ggplot(long_PublishersNoGrants, aes(x = Publisher, y = Value, fill = Type)) +
+ggplot(long_PublishersOANoGrants, aes(x = Publisher, y = Value, fill = Type)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   scale_fill_manual(values = custom_colors) +

@@ -11,13 +11,14 @@
 # openalexr package as the data in OpenAlex can change in major ways that mean old code no longer works.
 # If you're getting error messages when pulling data from the API, try reinstalling openalexR.
 
-install.packages("openalexR")
+
 install.packages("tidyverse")
 install.packages("janitor")
 install.packages("here")
 
 install.packages("remotes")
 remotes::install_github("ropensci/openalexR")
+# install.packages("openalexR")
 
 # We also need to create some directory subfolders that we'll save our work to. 
 # Again, you just need to run the next two lines of code once.
@@ -35,7 +36,7 @@ library(here)
 
 # Opens up the profile so you can tell OpenAlex you're a trusted party and it will handle your requests faster
 # Again, just run this line of code once.
-file.edit("~/.Rprofile")
+# file.edit("~/.Rprofile")
 
 
 #### Pull and combine all works by people affiliated with a specific institution ####
@@ -44,8 +45,8 @@ Inst_Works <- oa_fetch(    # This line of code should not change.
   entity = "works",    # Type of record you want - replace "works" with another type if you want (leave the quotation marks). See the list of OAX entities for options: https://docs.openalex.org/api-entities/entities-overview
   authorships.institutions.ror = c("01keh0577"),   # Replace the ID in the quotation marks with the ROR ID you want (see https://ror.org/). If you want multiple, separate with a comma after the closing quotation mark.
   from_publication_date = "2025-06-01", # If want to pull other years, just change the date range in this and the next lines of code.
-  to_publication_date = "2025-07-31",
-  mailto = oa_email(),  # Do not change this or the rest of the lines
+  to_publication_date = "2025-07-31",   #Make sure to keep it in YYYY-MM-DD format
+#  mailto = oa_email(),  # Do not change this or the rest of the lines
   per_page = 25,
   verbose = TRUE
 )
@@ -97,7 +98,8 @@ glimpse(Inst_Works)
 
 # We'll first delete unneeded columns. If you wish to include any, just delete its name from the list in the next chunk of code
 # Remember to also delete the single quotation marks around it and the comma that comes after it as well.
-Inst_Works <- Inst_Works %>% select(-one_of('abstract', 
+Inst_Works <- Inst_Works %>% select(-one_of('display_name',
+                                            'abstract', 
                                             'pdf_url', 
                                             'first_page', 
                                             'last_page', 
@@ -107,7 +109,7 @@ Inst_Works <- Inst_Works %>% select(-one_of('abstract',
                                             'ids', 
                                             'referenced_works', 
                                             'related_works', 
-                                            'concepts', 
+                                            'concepts',    # The old version of Topics; no longer being maintained
                                             'counts_by_year')) 
 
 # It can be good practice to check to see if you have duplicate records
@@ -130,9 +132,8 @@ tabyl(Inst_Works$type)
 
 # Now create a subset of data that includes only journal articles
 # Notice we are using a new name - Inst_Articles - that will create a new dataframe instead of writing over the old one, Inst_Works
-Inst_Articles <- filter(Inst_Works, type == "article")
-
-Inst_Articles <- Inst_Articles %>% 
+Inst_Articles <- Inst_Works %>% 
+  filter(type == "article") %>% 
   mutate(has_grant = ifelse(is.na(funders) & is.na(awards), "N", "Y"))
 
 
@@ -198,7 +199,7 @@ Inst_Articles <- Inst_Articles %>% select(-one_of('keywords'))
 # Sustainable_development_goals variable 
 Sustainable <- unnest(Inst_Articles, sustainable_development_goals, names_sep = "_", keep_empty = TRUE)
 Sustainable <- subset(Sustainable, select = -c(authorships, apc, awards, funders))
-write.csv(Keywords, "DataOutput/Keywords.csv")
+write.csv(Sustainable, "DataOutput/Sustainable.csv")
 Inst_Articles <- Inst_Articles %>% select(-one_of('sustainable_development_goals'))
 
 # Awards variable
@@ -311,17 +312,6 @@ Articles_InstCorresponding <- Articles_InstCorresponding %>%
 Articles_InstCorresponding %>% 
   tabyl(oa_status) %>% 
   arrange(desc(n))
-
-# Unnest the grants list variable so you can see which articles did and did not have a grant
-Articles_InstCorresponding <- unnest(Articles_InstCorresponding, funders, names_sep = "_", keep_empty = TRUE)
-
-# Unnesting grants is messy, so this cleans up to just the OAX grant funder ID and any NAs
-Articles_InstCorresponding <- Articles_InstCorresponding[grepl("^https:", Articles_InstCorresponding$grants) | is.na(Articles_InstCorresponding$grants), ]
-
-# Deduplicating again because of articles with multiple grants
-sum(duplicated(Articles_InstCorresponding$id))
-Articles_InstCorresponding <- Articles_InstCorresponding %>%
-  distinct(id, .keep_all = TRUE)
 
 # We now have our final flat spreadsheet that we can save as a CSV file. 
 Articles_InstCorresponding <- Articles_InstCorresponding %>% select(-one_of('apc')) 

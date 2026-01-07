@@ -1,12 +1,16 @@
 print("hello world")
 
+2+4
+
 sum1 <- 2+4
+
+sum1
 
 sum2 <- sum1 + 1
 
-sum3 <- sum4 + 1
+sum3 <- sum4 + 1  
 
-#Here's my note for how to use this code
+# Here's my note for how to use this code
 # Commenting out this line
 
 animal <- c('koala', 'hedgehog', 'sloth', 'panda') 

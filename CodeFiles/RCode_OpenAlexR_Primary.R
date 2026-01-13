@@ -23,7 +23,6 @@ remotes::install_github("ropensci/openalexR")
 # We also need to create some directory subfolders that we'll save our work to. 
 # Again, you just need to run the next two lines of code once.
 
-dir.create("DataOutput")
 dir.create("Visuals")
 
 # Once you install the packages, you then need to call them to get them to actually work. You can do so by running
@@ -46,7 +45,7 @@ Inst_Works <- oa_fetch(    # This line of code should not change.
   authorships.institutions.ror = c("01keh0577"),   # Replace the ID in the quotation marks with the ROR ID you want (see https://ror.org/). If you want multiple, separate with a comma after the closing quotation mark.
   from_publication_date = "2025-06-01", # If want to pull other years, just change the date range in this and the next lines of code.
   to_publication_date = "2025-07-31",   #Make sure to keep it in YYYY-MM-DD format
-#  mailto = oa_email(),  # Do not change this or the rest of the lines
+  #  mailto = oa_email(),  # Do not change this or the rest of the lines
   per_page = 25,
   verbose = TRUE
 )
@@ -145,18 +144,18 @@ Inst_Articles <- Inst_Works %>%
 # Current name used in OAX data goes to the left of the =, new name goes to the right.
 Inst_Articles <- Inst_Articles %>%
   mutate(host_organization_name = recode(host_organization_name, 
-                              "Wiley-Blackwell" = "Wiley", 
-                              "Springer Science+Business Media" = "Springer",
-                              "Routledge" = "Taylor & Francis",
-                              "Nature Portfolio" = "Springer",
-                              "RELX Group (Netherlands)" = "Elsevier",
-                              "Elsevier BV" = "Elsevier",
-                              "BioMed Central" = "Springer",
-                              "Springer Nature" = "Springer",
-                              "John Wiley & Sons Ltd" = "Wiley",
-                              "Palgrave Macmillan" = "Palgrave",
-                              "WileyOpen" = "Wiley",
-                              "Multidisciplinary Digital Publishing Institute" = "MDPI"))
+                                         "Wiley-Blackwell" = "Wiley", 
+                                         "Springer Science+Business Media" = "Springer",
+                                         "Routledge" = "Taylor & Francis",
+                                         "Nature Portfolio" = "Springer",
+                                         "RELX Group (Netherlands)" = "Elsevier",
+                                         "Elsevier BV" = "Elsevier",
+                                         "BioMed Central" = "Springer",
+                                         "Springer Nature" = "Springer",
+                                         "John Wiley & Sons Ltd" = "Wiley",
+                                         "Palgrave Macmillan" = "Palgrave",
+                                         "WileyOpen" = "Wiley",
+                                         "Multidisciplinary Digital Publishing Institute" = "MDPI"))
 
 
 # Now we'll display in the console how many articles were published by publisher in descending order
@@ -214,6 +213,12 @@ Funders <- subset(Funders, select = -c(authorships, apc))
 write.csv(Funders, "DataOutput/Funders.csv")
 Inst_Articles <- Inst_Articles %>% select(-one_of('funders'))
 
+# APC variable
+APC <- unnest(Inst_Articles, apc, names_sep = "_", keep_empty = TRUE)
+APC <- subset(APC, select = -c(authorships))
+write.csv(APC, "DataOutput/APC.csv")
+Inst_Articles <- Inst_Articles %>% select(-one_of('apc'))
+
 # It's time to unnest the author variable so we'll have a row for each author for a single work, meaning we'll have multiple rows per work
 Articles_Authors <- unnest(Inst_Articles, authorships, names_sep = "_", keep_empty = TRUE)
 
@@ -265,7 +270,6 @@ CollabDistinctWorks <- Articles_Collabs %>%
   distinct(id, .keep_all = TRUE)
 
 # Save the new dataframe for later analysis, which means removing the remaining nested variables
-Articles_Collabs <- Articles_Collabs %>% select(-one_of('apc')) 
 write.csv(Articles_Collabs, "DataOutput/Articles_Collabs.csv")
 
 # To focus on authors from your institution, create a subset with just rows featuring your authors
@@ -278,8 +282,7 @@ Articles_InstAuthors <- Articles_InstAuthors %>%
   mutate(author_totalworks = n()) %>%
   ungroup()
 
-# Remove the remaining nested variables to save list of all your institution's authors (even duplicates) as a csv file
-Articles_InstAuthors_CSV <- Articles_InstAuthors %>% select(-one_of('apc')) 
+# Save the list of all your institution's authors (even duplicates) as a csv file
 write.csv(Articles_InstAuthors_CSV, "DataOutput/Articles_InstAuthors_CSV.csv")
 
 # Making sure we don't have duplicates because someone has multiple current affiliations
@@ -294,8 +297,7 @@ Articles_InstDistinctAuthors <- Articles_InstAuthors %>%
 # Get a feel for how many works each author was publishing by seeing how many had 1 article, 2, etc.
 tabyl(Articles_InstDistinctAuthors$author_totalworks)
 
-# Remove remaining nested variables so can then save as csv file.
-Articles_InstDistinctAuthors <- Articles_InstDistinctAuthors %>% select(-one_of('apc')) 
+# Save as csv file.
 write.csv(Articles_InstDistinctAuthors, "DataOutput/Articles_InstDistinctAuthors.csv")
 
 # Now create a subset of articles where your institution's author has served as corresponding author
@@ -314,5 +316,4 @@ Articles_InstCorresponding %>%
   arrange(desc(n))
 
 # We now have our final flat spreadsheet that we can save as a CSV file. 
-Articles_InstCorresponding <- Articles_InstCorresponding %>% select(-one_of('apc')) 
 write.csv(Articles_InstCorresponding, "DataOutput/Articles_InstCorresponding.csv")

@@ -1,6 +1,6 @@
 # This file should be used after you have imported and cleaned up data using the RCode_OpenAlexR script. 
 # This will have you analyze the nested variables that were removed from the main dataframe in the prior script.
-# These include Topics, Keywords, Sustainability, Funders, and Awards
+# These include Topics, Keywords, Sustainability, Funders, Awards, and APC
 
 # First reload the packages at the start of a new R session
 library(tidyverse)
@@ -176,3 +176,86 @@ Articles_InstCorresponding <- Articles_InstCorresponding[grepl("^https:", Articl
 sum(duplicated(Articles_InstCorresponding$id))
 Articles_InstCorresponding <- Articles_InstCorresponding %>%
   distinct(id, .keep_all = TRUE)
+
+
+
+### APC ###
+
+APC <- read_csv(here("DataOutput/APC.csv"))
+
+# This dataframe will now have two rows for some of the articles in our set
+# This is because for those articles with an APC, it will have a row for the list APC and another for the actual paid APC
+# You can see this in the column "apc_type" where the value is paid, list, or NA for those articles that OAX couldn't find an APC
+# The value in apc_currency_usd will then show the value of the paid or list APC
+# However, it will be easier to work with this data if instead of multiple rows per article to have just one row
+# and then a column showing the value of the list APC and then another column showing the value of the paid APC
+# We'll use the command pivot_wider to do this - it will create new columns for each of the values found in apc_type
+# We'll also use group_by to make sure these values then show up for each row of an article
+# And then we'll use select to remove the remaining apc columns we don't need
+APC <- APC %>%
+  pivot_wider(
+    names_from = apc_type,
+    values_from = apc_value_usd,
+    names_prefix = "apc_"
+  ) %>%
+  # Fill values for all rows with the same id
+  group_by(id) %>%
+  mutate(
+    apc_list = first(na.omit(apc_list)),
+    apc_paid = first(na.omit(apc_paid))
+  ) %>%
+  ungroup() %>%
+  select(-apc_value, -apc_currency, -apc_provenance, -apc_NA)
+
+# Now we can remove our duplicate rows so that we just have one row per article
+APC <- APC %>%
+  distinct(id, .keep_all = TRUE)
+
+
+# We can also now analyze the APC by other variables using group_by. We'll start with the variable has_grant
+APC_grant <- APC %>%
+  group_by(has_grant) %>%
+  summarise(
+    avg_apc_list = mean(apc_list, na.rm = TRUE),
+    avg_apc_paid = mean(apc_paid, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Now call the dataframe to see the results
+APC_grant
+
+# Now by publication_year
+APC_year <- APC %>%
+  group_by(publication_year) %>%
+  summarise(
+    avg_apc_list = mean(apc_list, na.rm = TRUE),
+    avg_apc_paid = mean(apc_paid, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Now call the dataframe to see the results
+APC_year
+
+# And now by publisher (i.e. host_organization_name)
+# However, because we have so many publishers, we'll focus on the 10 most common ones in our data frame
+# First we need to create a list of these
+top20_hosts <- APC %>%
+  count(host_organization_name, sort = TRUE) %>%
+  slice_head(n = 20) %>%
+  pull(host_organization_name)
+
+# Now we can use that list to create our comparison
+APC_publisher <- APC %>%
+  filter(host_organization_name %in% top20_hosts) %>%
+  group_by(host_organization_name) %>%
+  summarise(
+    n_rows = n(),
+    avg_apc_list = mean(apc_list, na.rm = TRUE),
+    avg_apc_paid = mean(apc_paid, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(n_rows), host_organization_name)  # descending by commonness
+
+# Now call the dataframe to see the results
+APC_publisher
+

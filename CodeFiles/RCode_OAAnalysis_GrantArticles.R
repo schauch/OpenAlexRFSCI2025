@@ -77,9 +77,6 @@ long_PublishersOAGrants <- PublishersOAGrants %>%
   pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
                values_to = "Value") %>%
-#  group_by(Publisher) %>%
-#  mutate(Total = sum(Value)) %>%
-#  ungroup() %>%
   mutate(Publisher = forcats::fct_reorder(Publisher, Total, .desc = FALSE))
 
 

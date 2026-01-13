@@ -76,13 +76,10 @@ PublishersOANoGrants <- head(PublishersOANoGrants, 10)
 
 # Now we have to "melt" the Publishers DF to the appropriate format
 long_PublishersOANoGrants <- PublishersOANoGrants %>%
-  select(Publisher, Gold, Hybrid, Diamond, Closed, Green, Bronze) %>%
-  pivot_longer(cols = c(Gold, Hybrid, Diamond, Closed, Green, Bronze), 
+  select(Publisher, Gold, Hybrid, Green, Diamond, Closed, Bronze, Total) %>%
+  pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
                values_to = "Value") %>% 
-  group_by(Publisher) %>%
-  mutate(Total = sum(Value)) %>%
-  ungroup() %>%
   mutate(Publisher = forcats::fct_reorder(Publisher, Total, .desc = FALSE))
 
 # Run the below code to specify what color you want to use for each OA type in the grid

@@ -73,9 +73,6 @@ long_PublishersOA <- PublishersOAVisual %>%
   pivot_longer(cols = c(Gold, Hybrid, Green, Diamond, Closed, Bronze), 
                names_to = "Type", 
                values_to = "Value") %>% 
-#  group_by(Publisher) %>%
-#  mutate(Total = sum(Value)) %>%
-#  ungroup() %>%
   mutate(Publisher = forcats::fct_reorder(Publisher, Total, .desc = FALSE))
 
 # Run the below code to specify what color you want to use for each OA type in the grid

@@ -20,8 +20,8 @@ install.packages("remotes")
 remotes::install_github("ropensci/openalexR")
 # install.packages("openalexR")
 
-# We also need to create some directory subfolders that we'll save our work to. 
-# Again, you just need to run the next two lines of code once.
+# We also need to create a directory subfolder that we'll save our work to. 
+# Again, you just need to run the next line of code once.
 
 dir.create("Visuals")
 

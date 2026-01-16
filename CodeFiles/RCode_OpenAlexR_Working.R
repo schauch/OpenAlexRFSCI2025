@@ -35,8 +35,14 @@ library(here)
 
 # Opens up the profile so you can tell OpenAlex you're a trusted party and it will handle your requests faster
 # Again, just run this line of code once.
-# file.edit("~/.Rprofile")
+file.edit("~/.Rprofile")
 
+# In the above, .Rprofile, copy and paste the below code (if it's not already there)
+# and replace API_Key_here with your OpenAlex API key.
+# To get your free key, register an account with openalex.org 
+# and then go to https://openalex.org/settings/api
+
+options(openalexR.apikey = "API_Key_Here")
 
 #### Pull and combine all works by people affiliated with a specific institution ####
 # This uses the openalexr package to pull data from the OAX API and turn it into what's known in R as a dataframe. 
@@ -44,10 +50,8 @@ Inst_Works <- oa_fetch(    # This line of code should not change.
   entity = "works",    # Type of record you want - replace "works" with another type if you want (leave the quotation marks). See the list of OAX entities for options: https://docs.openalex.org/api-entities/entities-overview
   authorships.institutions.ror = c("01keh0577"),   # Replace the ID in the quotation marks with the ROR ID you want (see https://ror.org/). If you want multiple, separate with a comma after the closing quotation mark.
   from_publication_date = "2025-06-01", # If want to pull other years, just change the date range in this and the next lines of code.
-  to_publication_date = "2025-07-31",   #Make sure to keep it in YYYY-MM-DD format
-  #  mailto = oa_email(),  # Do not change this or the rest of the lines
-  per_page = 25,
-  verbose = TRUE
+  to_publication_date = "2025-07-31",   # Make sure to keep it in YYYY-MM-DD format
+  verbose = TRUE   # Do not change this
 )
 # The more data you try to pull from the API, the more problems can pop up, so it can help to break your pull into chunks
 # such as by using smaller date ranges.

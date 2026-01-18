@@ -9,3 +9,5 @@ This project includes the following code files:
 5. RCode_OAAnalysis_GrantArticles - This file contains almost the exact same code as RCode_AllArticles_OAAnalysis except that it focuses on articles that OpenAlex has identified has being grant funded.
 6. RCode_OAAnalysis_NoGrantArticles - This file contains almost the exact same code as RCode_AllArticles_OAAnalysis except that it focuses on articles that OpenAlex has identified has NOT being grant funded.
 7. RCode_FurtherAnalysis - This file contains code to analyze some of the nested variables that were extracted from the main dataset in the RCode_OpenAlexR_Working script.
+
+Everything in this repository is licensed with a CC-BY-NC-4.0 license.

@@ -18,7 +18,7 @@ install.packages("here")
 
 install.packages("remotes")
 remotes::install_github("ropensci/openalexR")
-# install.packages("openalexR")
+ install.packages("openalexR")
 
 # We also need to create a directory subfolder that we'll save our work to. 
 # Again, you just need to run the next line of code once.
@@ -287,7 +287,7 @@ Articles_InstAuthors <- Articles_InstAuthors %>%
   ungroup()
 
 # Save the list of all your institution's authors (even duplicates) as a csv file
-write.csv(Articles_InstAuthors_CSV, "DataOutput/Articles_InstAuthors_CSV.csv")
+write.csv(Articles_InstAuthors, "DataOutput/Articles_InstAuthors.csv")
 
 # Making sure we don't have duplicates because someone has multiple current affiliations
 # Should only see one value - your institution's

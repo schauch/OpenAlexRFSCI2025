@@ -7,7 +7,7 @@ library(janitor)
 library(here)
 
 # Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
-Articles_InstCorresponding_Grants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
+Articles_InstCorresponding_Grants <- read_csv(here("DataOutput/Articles_InstCorresponding.csv"))
 
 # Some entries will not have publisher information and will be lised as NA
 # We can use the below code to remove rows with no publisher names, which will help our graphs
@@ -52,6 +52,8 @@ PublishersOAGrants <- PublishersOAGrants %>%
 PublishersOAGrants <- PublishersOAGrants %>% 
   adorn_totals("col") %>% 
   arrange(desc(Total))
+
+write_csv(PublishersOAGrants, "DataOutput/PublishersOAGrants.csv")
 
 # Now we'll create another dataframe, PublishersGrantsPercent, which shows our table but by percentage instead of count
 Percent_PublishersOAGrants <- Articles_InstCorresponding_Grants %>% 

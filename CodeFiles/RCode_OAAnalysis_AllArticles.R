@@ -6,7 +6,7 @@ library(janitor)
 library(here)
 
 # Read in your file that you made at the end of the code file labeled RCode_OpenAlexR.
-Articles_InstCorresponding <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
+Articles_InstCorresponding <- read_csv(here("DataOutput/Articles_InstCorresponding.csv"))
 
 # Some entries will not have publisher information and will be lised as NA
 # We can use the below code to remove rows with no publisher names, which will help our graphs

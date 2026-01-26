@@ -2,14 +2,12 @@
 # Specifically on journal articles that were identified by OpenAlex as being NOT grant funded and where an author from your institution served as corresponding author.
 # You will need to have first worked your way through the code file labeled RCode_OpenAlexR.
 
-install.packages("janitor")
-
 library(tidyverse)
 library(janitor)
 library(here)
 
 # Read in your first file to analyze. You made this in the previous code file labeled RCode_OpenAlexR.
-Articles_InstCorresponding_NoGrants <- read_csv(here("DataOutput/Inst_Articles_InstCorresponding.csv"))
+Articles_InstCorresponding_NoGrants <- read_csv(here("DataOutput/Articles_InstCorresponding.csv"))
 
 # Some entries will not have publisher information and will be lised as NA
 # We can use the below code to remove rows with no publisher names, which will help our graphs

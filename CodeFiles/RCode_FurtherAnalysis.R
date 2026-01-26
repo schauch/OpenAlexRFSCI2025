@@ -1,11 +1,18 @@
 # This file should be used after you have imported and cleaned up data using the RCode_OpenAlexR script. 
 # This will have you analyze the nested variables that were removed from the main dataframe in the prior script.
-# These include Topics, Keywords, Sustainability, Funders, Awards, and APC
+# These include Topics, Keywords, Sustainability, Funders, and APC
 
 # First reload the packages at the start of a new R session
 library(tidyverse)
 library(janitor)
 library(here)
+
+# There might be points along the way where you want to save a file to epxlore elsewhere
+# All you have to do is run the command: 
+write_csv(DataframeNameHere, "DataOutput/FileNameHere.csv")
+# Just make sure to change DataframeNameHere to the name of the dataframe you want to save
+# and to change FileNameHere to whatever you want to name the file.
+# Leave everything else in that comman as is.
 
 ### Topics ###
 
@@ -95,14 +102,14 @@ Keywords %>%
 # And many of these keywords will likely have low scores - i.e., OAX's AI did not think there was a strong connection
 # So we can remove rows where the score is less than a certain number. For now, well go with less than 50%, or .5
 Keywords <- Keywords %>% 
-  filter(keywords_score > .5)
+  filter(keywords_score > .75)
 
 # If you want to further analyze articles that have a specific keyword, use the below code to create a subset
 # Just change out the KeywordHere with whichever keyword you want to analyze.
 # If you want to subset based on multiple keywords, you can use the or operator, | , in between
 # So filter(keywords_display_name == "Keyword1" | keywords_display_name == "Keyword2")
 Keywords_Specific <- Keywords %>% 
-  filter(keywords_display_name == "KeywordHere")
+  filter(keywords_display_name == "Medicine")
 
 
 
@@ -117,7 +124,7 @@ Sustainable %>%
 # If you want to further analyze articles related to a specific goal, use the code below to create a subset
 # Replace GoalHere with the specific goal you want to investigate
 Sustainable_Specific <- Sustainable %>% 
-  filter(sustainable_development_goals_display_name == "GoalHere")
+  filter(sustainable_development_goals_display_name == "Climate action")
 
 
 
@@ -145,11 +152,44 @@ Funders %>%
 # You can also add more lines as needed - just make sure to have a comma at the end of each line except for the last line.
 
 # For example, if I wanted to combine child departments of the United States NIH, I could use:
-# Funders <- Funders %>%
-#   mutate(funders_parent_name = recode(funders_display_name, 
-#                                    "National Institute on Drug Abuse" = "National Institutes of Health", 
-#                                    "United States National Library of Medicine" = "National Institutes of Health"))
+ Funders <- Funders %>%
+   mutate(funders_parent_name = recode(funders_display_name, 
+                                    "National Institute on Drug Abuse" = "National Institutes of Health", 
+                                    "United States National Library of Medicine" = "National Institutes of Health"))
 
+ Funders <- Funders %>%
+   mutate(funders_parent_name = recode(funders_display_name, 
+                                       "National Institute on Drug Abuse" = "National Institutes of Health", 
+                                       "United States National Library of Medicine" = "National Institutes of Health",
+                                       "Center for Scientific Review" = "National Institutes of Health",
+                                       "Center for Information Technology" = "National Institutes of Health",
+                                       "National Center for Complementary and Integrative Health" = "National Institutes of Health",
+                                       "National Institute of Arthritis and Musculoskeletal and Skin Diseases" = "National Institutes of Health",
+                                       "National Institute of Biomedical Imaging and Bioengineering" = "National Institutes of Health",
+                                       "National Institute of Dental and Craniofacial Research" = "National Institutes of Health",
+                                       "National Human Genome Research Institute" = "National Institutes of Health",
+                                       "National Institute of Diabetes and Digestive and Kidney Diseases" = "National Institutes of Health",
+                                       "National Institute of Environmental Health Sciences" = "National Institutes of Health",
+                                       "National Heart, Lung, and Blood Institute" = "National Institutes of Health",
+                                       "National Institute of Nursing Research" = "National Institutes of Health",
+                                       "National Institute of Neurological Disorders and Stroke" = "National Institutes of Health",
+                                       "National Institute on Alcohol Abuse and Alcoholism" = "National Institutes of Health",
+                                       "National Institute of Allergy and Infectious Diseases" = "National Institutes of Health",
+                                       "National Institute on Aging" = "National Institutes of Health",
+                                       "National Eye Institute" = "National Institutes of Health",
+                                       "National Cancer Institute" = "National Institutes of Health",
+                                       "Eunice Kennedy Shriver National Institute of Child Health and Human Development" = "National Institutes of Health",
+                                       "National Institute on Minority Health and Health Disparities" = "National Institutes of Health",
+                                       "National Center for Advancing Translational Sciences" = "National Institutes of Health",
+                                       "National Institute of General Medical Sciences" = "National Institutes of Health",
+                                       "National Institutes of Health Clinical Center" = "National Institutes of Health",
+                                       "National Institute on Deafness and Other Communication Disorders" = "National Institutes of Health",
+                                       "National Institute of Mental Health" = "National Institutes of Health",
+                                       "Office of Research Infrastructure Programs" = "National Institutes of Health",
+                                       "National Institutes of Health" = "National Institutes of Health"))
+ 
+ 
+ 
 Funders <- Funders %>% 
   mutate(funders_parent_name = recode(funders_display_name,
                                       "ChildName1Here" = "ParentNameHere",
@@ -159,23 +199,6 @@ Funders <- Funders %>%
 Funders %>% 
   tabyl(funders_parent_name) %>% 
   arrange(desc(n))
-
-
-### Awards ###
-
-Awards <- read_csv(here("DataOutput/Awards.csv"))
-
-#Need to clean this up.
-# Unnest the grants list variable so you can see which articles did and did not have a grant
-Articles_InstCorresponding <- unnest(Articles_InstCorresponding, funders, names_sep = "_", keep_empty = TRUE)
-
-# Unnesting grants is messy, so this cleans up to just the OAX grant funder ID and any NAs
-Articles_InstCorresponding <- Articles_InstCorresponding[grepl("^https:", Articles_InstCorresponding$grants) | is.na(Articles_InstCorresponding$grants), ]
-
-# Deduplicating again because of articles with multiple grants
-sum(duplicated(Articles_InstCorresponding$id))
-Articles_InstCorresponding <- Articles_InstCorresponding %>%
-  distinct(id, .keep_all = TRUE)
 
 
 
